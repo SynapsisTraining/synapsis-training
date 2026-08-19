@@ -46,7 +46,8 @@ if st.button("Analizar y Reformular"):
         ## 🎭 5. Simulación del Diálogo
         """
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={CLAVE_API}"
+        # Actualizado al modelo estándar actual
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={CLAVE_API}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"temperature": 0.7, "maxOutputTokens": 4000}
