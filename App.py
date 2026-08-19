@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-# Tu clave queda guardada de forma segura en los Secrets de la nube
+# Tu clave se lee de forma segura desde los Secrets de Streamlit Cloud
 CLAVE_API = st.secrets["GEMINI_API_KEY"]
 
 st.set_page_config(page_title="Synápsis Training | Comunicación Benevolente", page_icon="🌿", layout="centered")
@@ -10,22 +10,22 @@ st.set_page_config(page_title="Synápsis Training | Comunicación Benevolente", 
 st.markdown("""
     <style>
     .stApp { background-color: #F9F9FB; }
-    h1 { color: #2D3436 !important; font-family: 'Helvetica Neue', sans-serif; font-size: 1.8rem; text-align: center; }
+    h1 { color: #2D3436 !important; font-family: 'Helvetica Neue', sans-serif; font-size: 2rem; text-align: center; }
     .stButton>button { background-color: #2D3436; color: white; border-radius: 8px; border: none; font-weight: bold; width: 100%; }
     .stButton>button:hover { background-color: #4A7C59; color: white; }
     </style>
 """, unsafe_allow_html=True)
 
 try:
-    st.image("Logotipo.jpeg", width=200)
+    st.image("Logotipo.jpeg", width=250)
 except:
     st.title("🌿 Synápsis Training")
 
 st.markdown("<h1 style='text-align: center;'>Comunicación Benevolente</h1>", unsafe_allow_html=True)
 
-# Entorno de análisis limpio
-contexto = st.selectbox("Selecciona el ámbito:", ["Niños (Formación)", "Jugadores (Rendimiento)", "Padres (Comunicación)", "Directivos (Gestión)"])
-mensaje_entrada = st.text_area("Mensaje o situación a analizar:", placeholder="Ej: 'No puedo creer que no hayas hecho caso en el ejercicio...'", height=120)
+# Tus entornos originales
+contexto = st.selectbox("Selecciona el entorno del conflicto:", ["Comunidad de Vecinos", "Empresa / Equipo de Trabajo", "Centro Educativo / Claustro", "Personal / Familiar"])
+mensaje_entrada = st.text_area("Escribe el mensaje o pensamiento a analizar:", placeholder="Ej: 'Estoy harto de que hagas lo que te da la gana...'", height=120)
 
 if 'resultado_generado' not in st.session_state:
     st.session_state.resultado_generado = None
@@ -35,16 +35,10 @@ if st.button("Analizar y Reformular"):
         st.warning("Por favor, escribe el texto a analizar.")
     else:
         prompt = f"""
-        Actúa como un facilitador experto de Synápsis Training.
-        Analiza este mensaje en el ámbito de '{contexto}': "{mensaje_entrada}"
+        Actúa como un facilitador experto de Synápsis Training, especializado en Comunicación Benevolente.
+        Analiza este texto en el contexto '{contexto}': "{mensaje_entrada}"
         
-        Aplica la metodología de Comunicación Benevolente adaptada al deporte:
-        - Si es con Niños: Prioriza la seguridad psicológica, el refuerzo positivo y la claridad.
-        - Si es con Jugadores: Enfoca hacia la autotelia y el rendimiento consciente.
-        - Si es con Padres: Busca la alianza educativa y la desescalada.
-        - Si es con Directivos: Enfoca hacia la visión y la coherencia institucional.
-
-        Estructura el resultado de forma profesional:
+        IMPORTANTE: Ve directo al grano. Estructura el resultado con estos encabezados:
         ## 🔍 1. Radiografía de tu Pensamiento
         ## 🌿 2. Reformulación Benevolente Directa
         ## 🪞 3. Espejo Emocional
@@ -60,7 +54,7 @@ if st.button("Analizar y Reformular"):
         headers = {"Content-Type": "application/json"}
         
         caja_estado = st.empty()
-        caja_estado.info("⏳ Synápsis analizando conexión neuronal...")
+        caja_estado.info("⏳ Synápsis procesando conexión neuronal...")
         
         try:
             response = requests.post(url, json=payload, headers=headers, timeout=45)
@@ -69,9 +63,10 @@ if st.button("Analizar y Reformular"):
                 data = response.json()
                 st.session_state.resultado_generado = data["candidates"][0]["content"]["parts"][0]["text"]
             else:
-                st.error("⚠️ Ha ocurrido un error técnico. Por favor, intenta de nuevo en unos segundos.")
+                error_msg = response.json().get('error', {}).get('message', 'Error desconocido')
+                st.error(f"⚠️ Error {response.status_code}: {error_msg}")
         except Exception as e:
-            st.error(f"⚠️ Error de conexión: {e}")
+            st.error(f"⚠️ Error de red: {e}")
 
 if st.session_state.resultado_generado:
     st.markdown(st.session_state.resultado_generado)
