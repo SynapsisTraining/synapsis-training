@@ -46,28 +46,31 @@ if st.button("Analizar y Reformular"):
         ## 🎭 5. Simulación del Diálogo
         """
         
-        # Actualizado al modelo estándar actual
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={CLAVE_API}"
+        # Usamos gemini-1.5-flash que es el estándar más estable y rápido para peticiones HTTP directas
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={CLAVE_API}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"temperature": 0.7, "maxOutputTokens": 4000}
         }
         headers = {"Content-Type": "application/json"}
         
-        caja_estado = st.empty()
-        caja_estado.info("⏳ Synápsis procesando conexión neuronal...")
-        
-        try:
-            response = requests.post(url, json=payload, headers=headers, timeout=45)
-            caja_estado.empty()
-            if response.status_code == 200:
-                data = response.json()
-                st.session_state.resultado_generado = data["candidates"][0]["content"]["parts"][0]["text"]
-            else:
-                error_msg = response.json().get('error', {}).get('message', 'Error desconocido')
-                st.error(f"⚠️ Error {response.status_code}: {error_msg}")
-        except Exception as e:
-            st.error(f"⚠️ Error de red: {e}")
+        with st.spinner("⏳ Synápsis procesando conexión neuronal..."):
+            try:
+                response = requests.post(url, json=payload, headers=headers, timeout=30)
+                if response.status_code == 200:
+                    data = response.json()
+                    if "candidates" in data and len(data["candidates"]) > 0:
+                        st.session_state.resultado_generado = data["candidates"][0]["content"]["parts"][0]["text"]
+                    else:
+                        st.error("⚠️ La respuesta de la inteligencia artificial vino vacía. Prueba otra vez.")
+                else:
+                    error_data = response.json()
+                    error_msg = error_data.get('error', {}).get('message', 'Error desconocido')
+                    st.error(f"⚠️ Error {response.status_code}: {error_msg}")
+            except requests.exceptions.Timeout:
+                st.error("⚠️ La solicitud ha tardado demasiado tiempo en responder. Inténtalo de nuevo.")
+            except Exception as e:
+                st.error(f"⚠️ Error de red o conexión: {e}")
 
 if st.session_state.resultado_generado:
     st.markdown(st.session_state.resultado_generado)
