@@ -1,7 +1,9 @@
 import streamlit as st
 import requests
 
-CLAVE_API_POR_DEFECTO = ""
+# Intentamos obtener la clave desde los secretos de la nube. 
+# Si no la encuentra (por ejemplo, si lo corres localmente), la deja vacía.
+CLAVE_API_NUBE = st.secrets.get("GEMINI_API_KEY", "")
 
 st.set_page_config(page_title="Synápsis Training | Comunicación Benevolente", page_icon="🌿", layout="centered")
 
@@ -23,19 +25,19 @@ st.markdown("<h1 style='text-align: center;'>Comunicación Benevolente</h1>", un
 
 with st.sidebar:
     st.header("⚙️ Configuración")
-    api_key = st.text_input("API Key:", value=CLAVE_API_POR_DEFECTO, type="password")
+    # Si la clave se cargó de los secretos, el campo se rellena automáticamente
+    api_key = st.text_input("API Key:", value=CLAVE_API_NUBE, type="password")
 
 contexto = st.selectbox("Selecciona el entorno del conflicto:", ["Comunidad de Vecinos", "Empresa / Equipo de Trabajo", "Centro Educativo / Claustro", "Personal / Familiar"])
 mensaje_entrada = st.text_area("Escribe el mensaje o pensamiento a analizar:", placeholder="Ej: 'Estoy harto de que hagas lo que te da la gana...'", height=120)
 
-# Inicializamos el estado para guardar el resultado
 if 'resultado_generado' not in st.session_state:
     st.session_state.resultado_generado = None
 
 if st.button("Analizar y Reformular"):
     clave_final = api_key.strip()
-    if not clave_final or clave_final == "TU_API_KEY_AQUI":
-        st.error("🔑 Falta incluir la clave API.")
+    if not clave_final:
+        st.error("🔑 Falta incluir la clave API en la configuración.")
     elif not mensaje_entrada.strip():
         st.warning("Por favor, escribe el texto a analizar.")
     else:
@@ -69,10 +71,8 @@ if st.button("Analizar y Reformular"):
         except Exception as e:
             st.error(f"⚠️ Error de red: {e}")
 
-# Mostrar resultado y botón de descarga si existe
 if st.session_state.resultado_generado:
     st.markdown(st.session_state.resultado_generado)
-    
     st.download_button(
         label="📥 Descargar Análisis (Markdown)",
         data=st.session_state.resultado_generado,
