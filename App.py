@@ -23,16 +23,18 @@ except:
 
 st.markdown("<h1 style='text-align: center;'>Comunicación Benevolente</h1>", unsafe_allow_html=True)
 
-# Entornos configurados con el orden solicitado
-opciones = ["Personal / Familiar", "Equipo Deportivo", "Comunidad de Vecinos", "Empresa / Equipo de Trabajo", "Centro Educativo / Claustro"]
-contexto = st.selectbox("Selecciona el entorno del conflicto:", opciones)
-
-mensaje_entrada = st.text_area("Escribe el mensaje o pensamiento a analizar:", placeholder="Ej: 'Estoy harto de que hagas lo que te da la gana...'", height=120)
-
 if 'resultado_generado' not in st.session_state:
     st.session_state.resultado_generado = None
 
-if st.button("Analizar y Reformular"):
+# Formulario limpio y estable
+with st.form("formulario_analisis"):
+    opciones = ["Personal / Familiar", "Equipo Deportivo", "Comunidad de Vecinos", "Empresa / Equipo de Trabajo", "Centro Educativo / Claustro"]
+    contexto = st.selectbox("Selecciona el entorno del conflicto:", opciones)
+    mensaje_entrada = st.text_area("Escribe el mensaje o pensamiento a analizar:", placeholder="Ej: 'Estoy harto de que hagas lo que te da la gana...'", height=120)
+    
+    boton_enviar = st.form_submit_button("Analizar y Reformular")
+
+if boton_enviar:
     if not mensaje_entrada.strip():
         st.warning("Por favor, escribe el texto a analizar.")
     else:
@@ -40,7 +42,7 @@ if st.button("Analizar y Reformular"):
         Actúa como un facilitador experto de Synápsis Training, especializado en Comunicación Benevolente.
         Analiza este texto en el contexto '{contexto}': "{mensaje_entrada}"
         
-        IMPORTANTE: Ve directo al grano. Estructura el resultado con estos encabezados:
+        IMPORTANTE: Ve directo al grano. Estructura el resultado exactamente con estos encabezados:
         ## 🔍 1. Radiografía de tu Pensamiento
         ## 🌿 2. Reformulación Benevolente Directa
         ## 🪞 3. Espejo Emocional
@@ -48,7 +50,6 @@ if st.button("Analizar y Reformular"):
         ## 🎭 5. Simulación del Diálogo
         """
         
-        # Modelo estable optimizado para producción
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={CLAVE_API}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
@@ -56,26 +57,36 @@ if st.button("Analizar y Reformular"):
         }
         headers = {"Content-Type": "application/json"}
         
+        # Usamos un contenedor de estado limpio para evitar bloqueos en la interfaz
         with st.spinner("⏳ Synápsis procesando conexión neuronal..."):
             try:
-                # Timeout ampliado a 60 segundos para evitar cortes de red
                 response = requests.post(url, json=payload, headers=headers, timeout=60)
+                
                 if response.status_code == 200:
                     data = response.json()
-                    if "candidates" in data and len(data["candidates"]) > 0:
-                        st.session_state.resultado_generado = data["candidates"][0]["content"]["parts"][0]["text"]
-                    else:
-                        st.error("⚠️ La respuesta de la inteligencia artificial vino vacía. Prueba otra vez.")
+                    # Extracción segura de la respuesta
+                    try:
+                        texto_respuesta = data["candidates"][0]["content"]["parts"][0]["text"]
+                        st.session_state.resultado_generado = texto_respuesta
+                    except (KeyError, IndexError) as parse_error:
+                        st.error(f"⚠️ Error al interpretar la estructura de la respuesta de la IA: {parse_error}")
+                        st.write("Datos recibidos:", data)
                 else:
-                    error_data = response.json()
-                    error_msg = error_data.get('error', {}).get('message', 'Error desconocido')
+                    try:
+                        error_data = response.json()
+                        error_msg = error_data.get('error', {}).get('message', 'Error desconocido')
+                    except:
+                        error_msg = response.text
                     st.error(f"⚠️ Error {response.status_code}: {error_msg}")
+                    
             except requests.exceptions.Timeout:
                 st.error("⚠️ La solicitud ha tardado demasiado tiempo en responder. Inténtalo de nuevo.")
             except Exception as e:
                 st.error(f"⚠️ Error de red o conexión: {e}")
 
+# Mostrar el resultado guardado en la sesión de forma totalmente independiente
 if st.session_state.resultado_generado:
+    st.markdown("---")
     st.markdown(st.session_state.resultado_generado)
     st.download_button(
         label="📥 Descargar Análisis (Markdown)",
