@@ -23,18 +23,17 @@ except:
 
 st.markdown("<h1 style='text-align: center;'>Comunicación Benevolente</h1>", unsafe_allow_html=True)
 
+# Inicializar estados si no existen
 if 'resultado_generado' not in st.session_state:
     st.session_state.resultado_generado = None
 
-# Formulario limpio y estable
-with st.form("formulario_analisis"):
-    opciones = ["Personal / Familiar", "Equipo Deportivo", "Comunidad de Vecinos", "Empresa / Equipo de Trabajo", "Centro Educativo / Claustro"]
-    contexto = st.selectbox("Selecciona el entorno del conflicto:", opciones)
-    mensaje_entrada = st.text_area("Escribe el mensaje o pensamiento a analizar:", placeholder="Ej: 'Estoy harto de que hagas lo que te da la gana...'", height=120)
-    
-    boton_enviar = st.form_submit_button("Analizar y Reformular")
+# Campos fuera del formulario para evitar bloqueos en el motor WebKit (Apple)
+opciones = ["Personal / Familiar", "Equipo Deportivo", "Comunidad de Vecinos", "Empresa / Equipo de Trabajo", "Centro Educativo / Claustro"]
+contexto = st.selectbox("Selecciona el entorno del conflicto:", opciones)
+mensaje_entrada = st.text_area("Escribe el mensaje o pensamiento a analizar:", placeholder="Ej: 'Estoy harto de que hagas lo que te da la gana...'", height=120)
 
-if boton_enviar:
+# Botón directo sin form para compatibilidad total con Safari/Mac/iOS
+if st.button("Analizar y Reformular"):
     if not mensaje_entrada.strip():
         st.warning("Por favor, escribe el texto a analizar.")
     else:
@@ -57,20 +56,19 @@ if boton_enviar:
         }
         headers = {"Content-Type": "application/json"}
         
-        # Usamos un contenedor de estado limpio para evitar bloqueos en la interfaz
         with st.spinner("⏳ Synápsis procesando conexión neuronal..."):
             try:
                 response = requests.post(url, json=payload, headers=headers, timeout=60)
                 
                 if response.status_code == 200:
                     data = response.json()
-                    # Extracción segura de la respuesta
                     try:
                         texto_respuesta = data["candidates"][0]["content"]["parts"][0]["text"]
                         st.session_state.resultado_generado = texto_respuesta
+                        # Forzamos la recarga limpia de la pantalla para los navegadores de Apple
+                        st.rerun()
                     except (KeyError, IndexError) as parse_error:
                         st.error(f"⚠️ Error al interpretar la estructura de la respuesta de la IA: {parse_error}")
-                        st.write("Datos recibidos:", data)
                 else:
                     try:
                         error_data = response.json()
@@ -84,7 +82,7 @@ if boton_enviar:
             except Exception as e:
                 st.error(f"⚠️ Error de red o conexión: {e}")
 
-# Mostrar el resultado guardado en la sesión de forma totalmente independiente
+# Mostrar el resultado guardado en la sesión
 if st.session_state.resultado_generado:
     st.markdown("---")
     st.markdown(st.session_state.resultado_generado)
