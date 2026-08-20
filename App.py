@@ -23,8 +23,10 @@ except:
 
 st.markdown("<h1 style='text-align: center;'>Comunicación Benevolente</h1>", unsafe_allow_html=True)
 
-# Tus entornos originales
-contexto = st.selectbox("Selecciona el entorno del conflicto:", ["Comunidad de Vecinos", "Empresa / Equipo de Trabajo", "Centro Educativo / Claustro", "Personal / Familiar"])
+# Ajuste en las opciones del selectbox
+opciones = ["Personal / Familiar", "Equipo Deportivo", "Comunidad de Vecinos", "Empresa / Equipo de Trabajo", "Centro Educativo / Claustro"]
+contexto = st.selectbox("Selecciona el entorno del conflicto:", opciones)
+
 mensaje_entrada = st.text_area("Escribe el mensaje o pensamiento a analizar:", placeholder="Ej: 'Estoy harto de que hagas lo que te da la gana...'", height=120)
 
 if 'resultado_generado' not in st.session_state:
@@ -46,7 +48,6 @@ if st.button("Analizar y Reformular"):
         ## 🎭 5. Simulación del Diálogo
         """
         
-        # Actualizado al modelo que exige el servidor
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={CLAVE_API}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
