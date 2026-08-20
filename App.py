@@ -23,7 +23,7 @@ except:
 
 st.markdown("<h1 style='text-align: center;'>Comunicación Benevolente</h1>", unsafe_allow_html=True)
 
-# Ajuste en las opciones del selectbox
+# Entornos configurados con el orden solicitado
 opciones = ["Personal / Familiar", "Equipo Deportivo", "Comunidad de Vecinos", "Empresa / Equipo de Trabajo", "Centro Educativo / Claustro"]
 contexto = st.selectbox("Selecciona el entorno del conflicto:", opciones)
 
@@ -48,7 +48,8 @@ if st.button("Analizar y Reformular"):
         ## 🎭 5. Simulación del Diálogo
         """
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key={CLAVE_API}"
+        # Modelo estable optimizado para producción
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key={CLAVE_API}"
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"temperature": 0.7, "maxOutputTokens": 4000}
@@ -57,7 +58,8 @@ if st.button("Analizar y Reformular"):
         
         with st.spinner("⏳ Synápsis procesando conexión neuronal..."):
             try:
-                response = requests.post(url, json=payload, headers=headers, timeout=30)
+                # Timeout ampliado a 60 segundos para evitar cortes de red
+                response = requests.post(url, json=payload, headers=headers, timeout=60)
                 if response.status_code == 200:
                     data = response.json()
                     if "candidates" in data and len(data["candidates"]) > 0:
